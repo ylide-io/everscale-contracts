@@ -1,0 +1,21 @@
+{
+    "name": "ylide-contract",
+    "version": "1.0.0",
+    "description": "",
+    "main": "locklift.config.js",
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "rm -rf ./build && locklift build --config locklift.config.js",
+        "deploy": "locklift run --config locklift.config.js --disable-build --network local --script scripts/1-deploy-sample.js",
+        "deploy:account": "locklift run --config locklift.config.js --disable-build --network local --script scripts/2-deploy-account.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "everdev": "^1.2.1",
+        "locklift": "^1.5.3"
+    }
+}
