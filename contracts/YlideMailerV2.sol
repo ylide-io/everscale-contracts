@@ -1,4 +1,4 @@
-pragma ton-solidity >= 0.61.2;
+pragma ever-solidity >= 0.61.2;
 pragma AbiHeader expire;
 pragma AbiHeader pubkey;
 
@@ -16,6 +16,14 @@ contract YlideMailerV2 {
         tvm.accept();
     }
 
+    function getAddressByPublicKey(uint256 publicKey) public view returns (address addr) {
+        addr = publicKeyToAddress[publicKey];
+    }
+
+    function getPublicKeyByAddress(address addr) public view returns (uint256 publicKey) {
+        publicKey = addressToPublicKey[addr];
+    }
+
     function attachPublicKey(uint256 publicKey) public {
         addressToPublicKey[msg.sender] = publicKey;
     }
@@ -25,7 +33,10 @@ contract YlideMailerV2 {
     }
 
     function buildHash(uint256 pubkey, uint32 uniqueId, uint32 time) public pure returns (uint256 _hash) {
-        _hash = sha256(bytes(bytes32(pubkey * uniqueId * time)));
+        bytes data = bytes(bytes32(pubkey));
+        data.append(bytes(bytes4(uniqueId)));
+        data.append(bytes(bytes4(time)));
+        _hash = sha256(data);
     }
 
     // Virtual function for initializing bulk message sending
@@ -67,7 +78,7 @@ contract YlideMailerV2 {
 
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
-
+    
     function sendSmallMail(uint256 publicKey, uint32 uniqueId, address recipient, bytes key, bytes content) public {
         tvm.rawReserve(1 ton, 0);
 
