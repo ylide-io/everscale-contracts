@@ -2,10 +2,7 @@ pragma ever-solidity >= 0.61.2;
 pragma AbiHeader expire;
 pragma AbiHeader pubkey;
 
-contract YlideMailerV2 {
-
-    mapping(address => uint256) public addressToPublicKey;
-    mapping(uint256 => address) public publicKeyToAddress;
+contract YlideMailerV3 {
 
     event MailPush(address sender, uint256 msgId, bytes key);
     event MailContent(address sender, uint256 msgId, uint16 parts, uint16 partIdx, bytes content);
@@ -16,22 +13,6 @@ contract YlideMailerV2 {
         tvm.accept();
     }
 
-    function getAddressByPublicKey(uint256 publicKey) public view returns (address addr) {
-        addr = publicKeyToAddress[publicKey];
-    }
-
-    function getPublicKeyByAddress(address addr) public view returns (uint256 publicKey) {
-        publicKey = addressToPublicKey[addr];
-    }
-
-    function attachPublicKey(uint256 publicKey) public {
-        addressToPublicKey[msg.sender] = publicKey;
-    }
-
-    function attachAddress(uint256 publicKey) public {
-        publicKeyToAddress[publicKey] = msg.sender;
-    }
-
     function buildHash(uint256 pubkey, uint32 uniqueId, uint32 time) public pure returns (uint256 _hash) {
         bytes data = bytes(bytes32(pubkey));
         data.append(bytes(bytes4(uniqueId)));
@@ -40,20 +21,16 @@ contract YlideMailerV2 {
     }
 
     // Virtual function for initializing bulk message sending
-    function getMsgId(uint256 publicKey, uint32 uniqueId) public pure returns (uint256 msgId, uint32 initTime) {
-        initTime = msg.createdAt;
+    function getMsgId(uint256 publicKey, uint32 uniqueId, uint32 initTime) public pure returns (uint256 msgId) {
         msgId = buildHash(publicKey, uniqueId, initTime);
     }
 
     // Send part of the long message
-    function sendMultipartMailPart(uint256 publicKey, uint32 uniqueId, uint32 initTime, uint16 parts, uint16 partIdx, bytes content) public {
+    function sendMultipartMailPart(uint256 publicKey, uint32 uniqueId, uint32 initTime, uint16 parts, uint16 partIdx, bytes content) public pure {
         tvm.rawReserve(1 ton, 0);
 
         require(msg.createdAt >= initTime, 103);
         require(msg.createdAt - initTime >= 10 minutes, 104);
-
-        attachPublicKey(publicKey);
-        attachAddress(publicKey);
 
         uint256 msgId = buildHash(publicKey, uniqueId, initTime);
 
@@ -78,12 +55,9 @@ contract YlideMailerV2 {
 
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
-    
-    function sendSmallMail(uint256 publicKey, uint32 uniqueId, address recipient, bytes key, bytes content) public {
-        tvm.rawReserve(1 ton, 0);
 
-        attachPublicKey(publicKey);
-        attachAddress(publicKey);
+    function sendSmallMail(uint256 publicKey, uint32 uniqueId, address recipient, bytes key, bytes content) public pure {
+        tvm.rawReserve(1 ton, 0);
 
         uint256 msgId = buildHash(publicKey, uniqueId, msg.createdAt);
 
@@ -97,11 +71,8 @@ contract YlideMailerV2 {
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
 
-    function sendBulkMail(uint256 publicKey, uint32 uniqueId, address[] recipients, bytes[] keys, bytes content) public {
+    function sendBulkMail(uint256 publicKey, uint32 uniqueId, address[] recipients, bytes[] keys, bytes content) public pure {
         tvm.rawReserve(1 ton, 0);
-
-        attachPublicKey(publicKey);
-        attachAddress(publicKey);
 
         uint256 msgId = buildHash(publicKey, uniqueId, msg.createdAt);
 
