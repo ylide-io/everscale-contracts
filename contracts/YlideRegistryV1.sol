@@ -14,11 +14,15 @@ contract YlideRegistryV1 {
     }
 
     function attachPublicKey(uint256 publicKey) public pure {
-        emit AddressToPublicKey{dest: msg.sender}(publicKey);
+        tvm.rawReserve(1 ton, 0);
+        emit AddressToPublicKey{dest: address.makeAddrExtern(msg.sender.value, 256)}(publicKey);
+        msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
 
     function attachAddress(uint256 publicKey) public pure {
+        tvm.rawReserve(1 ton, 0);
         emit PublicKeyToAddress{dest: address.makeAddrExtern(publicKey, 256)}(msg.sender);
+        msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
 
 }

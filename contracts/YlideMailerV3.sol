@@ -65,7 +65,7 @@ contract YlideMailerV3 {
         address fakeContentAddr = address.makeAddrExtern(msgId, 256);
         address recipientAddr = address.makeAddrExtern(recipient.value, 256);
 
-        emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, 1, 1, content);
+        emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, 1, 0, content);
         emit MailPush{dest: recipientAddr}(msg.sender, msgId, key);
 
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
@@ -79,7 +79,7 @@ contract YlideMailerV3 {
         // For indexation purposes
         address fakeContentAddr = address.makeAddrExtern(msgId, 256);
 
-        emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, 1, 1, content);
+        emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, 1, 0, content);
 
         for (uint i = 0; i < recipients.length; i++) {
             address recipientAddr = address.makeAddrExtern(recipients[i].value, 256);
