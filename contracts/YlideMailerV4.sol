@@ -41,11 +41,11 @@ contract YlideMailerV4 is Owned {
     }
 
     // Send part of the long message
-    function sendMultipartMailPart(uint256 publicKey, uint32 uniqueId, uint32 initTime, uint16 parts, uint16 partIdx, bytes content) public view {
+    function sendMultipartMailPart(uint32 uniqueId, uint32 initTime, uint16 parts, uint16 partIdx, bytes content) public view {
         require(msg.createdAt >= initTime, 103);
-        require(msg.createdAt - initTime >= 10 minutes, 104);
+        require(msg.createdAt - initTime <= 600, 104);
 
-        uint256 msgId = buildHash(publicKey, uniqueId, initTime);
+        uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
 
         // For indexation purposes
         address fakeContentAddr = address.makeAddrExtern(msgId, 256);
@@ -60,8 +60,8 @@ contract YlideMailerV4 is Owned {
     }
 
     // Add recipient keys to some message
-    function addRecipients(uint256 publicKey, uint32 uniqueId, uint32 initTime, address[] recipients, bytes[] keys) public view {
-        uint256 msgId = buildHash(publicKey, uniqueId, initTime);
+    function addRecipients(uint32 uniqueId, uint32 initTime, address[] recipients, bytes[] keys) public view {
+        uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
         
         for (uint i = 0; i < recipients.length; i++) {
             address recipientAddr = address.makeAddrExtern(recipients[i].value, 256);
@@ -75,8 +75,8 @@ contract YlideMailerV4 is Owned {
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
 
-    function sendSmallMail(uint256 publicKey, uint32 uniqueId, address recipient, bytes key, bytes content) public view {
-        uint256 msgId = buildHash(publicKey, uniqueId, msg.createdAt);
+    function sendSmallMail(uint32 uniqueId, address recipient, bytes key, bytes content) public view {
+        uint256 msgId = buildHash(msg.pubkey(), uniqueId, msg.createdAt);
 
         // For indexation purposes
         address fakeContentAddr = address.makeAddrExtern(msgId, 256);
@@ -92,8 +92,8 @@ contract YlideMailerV4 is Owned {
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
 
-    function sendBulkMail(uint256 publicKey, uint32 uniqueId, address[] recipients, bytes[] keys, bytes content) public view {
-        uint256 msgId = buildHash(publicKey, uniqueId, msg.createdAt);
+    function sendBulkMail(uint32 uniqueId, address[] recipients, bytes[] keys, bytes content) public view {
+        uint256 msgId = buildHash(msg.pubkey(), uniqueId, msg.createdAt);
 
         // For indexation purposes
         address fakeContentAddr = address.makeAddrExtern(msgId, 256);

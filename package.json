@@ -10,7 +10,8 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "rm -rf ./build && locklift build --config locklift.config.js",
         "deploy": "locklift run --config locklift.config.js --disable-build --network local --script scripts/1-deploy-contracts.js",
-        "deploy:account": "locklift run --config locklift.config.js --disable-build --network local --script scripts/2-deploy-account.js"
+        "deploy:account": "locklift run --config locklift.config.js --disable-build --network local --script scripts/2-deploy-account.js",
+        "deploy:mainnet": "everdev contract deploy ./build/YlideMailerV4.abi.json"
     },
     "author": "",
     "license": "ISC",
