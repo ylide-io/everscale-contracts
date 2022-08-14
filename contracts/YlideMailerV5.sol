@@ -4,7 +4,7 @@ pragma AbiHeader pubkey;
 
 import './Owned.sol';
 
-contract YlideMailerV4 is Owned {
+contract YlideMailerV5 is Owned {
 
     uint128 public contentPartFee = 0;
     uint128 public recipientFee = 0;
@@ -12,6 +12,7 @@ contract YlideMailerV4 is Owned {
 
     event MailPush(address sender, uint256 msgId, bytes key);
     event MailContent(address sender, uint256 msgId, uint16 parts, uint16 partIdx, bytes content);
+    event MailBroadcast(uint256 msgId);
 
     constructor() public {
         require(tvm.pubkey() != 0, 101);
@@ -108,6 +109,30 @@ contract YlideMailerV4 is Owned {
         if (contentPartFee + recipientFee * recipients.length > 0) {
             beneficiary.transfer({ value: uint128(contentPartFee + recipientFee * recipients.length), bounce: false });
         }
+
+        msg.sender.transfer({ value: 0, flag: 128, bounce: false });
+    }
+
+    function broadcastMail(uint32 uniqueId, bytes content) public {
+        uint256 msgId = buildHash(msg.pubkey(), uniqueId, msg.createdAt);
+
+        // For indexation purposes
+        address fakeContentAddr = address.makeAddrExtern(msgId, 256);
+
+        emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, 1, 0, content);
+        emit MailBroadcast{dest: msg.sender}(msgId);
+
+        if (contentPartFee > 0) {
+            beneficiary.transfer({ value: uint128(contentPartFee), bounce: false });
+        }
+
+        msg.sender.transfer({ value: 0, flag: 128, bounce: false });
+    }
+
+    function broadcastMailHeader(uint32 uniqueId, uint32 initTime) public {
+        uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
+
+        emit MailBroadcast{dest: msg.sender}(msgId);
 
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
