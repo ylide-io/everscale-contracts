@@ -113,14 +113,14 @@ contract YlideMailerV5 is Owned {
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
 
-    function broadcastMail(uint32 uniqueId, bytes content) public {
+    function broadcastMail(uint32 uniqueId, bytes content) public view {
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, msg.createdAt);
 
         // For indexation purposes
         address fakeContentAddr = address.makeAddrExtern(msgId, 256);
 
         emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, 1, 0, content);
-        emit MailBroadcast{dest: msg.sender}(msgId);
+        emit MailBroadcast{dest: address.makeAddrExtern(msg.sender.value, 256)}(msgId);
 
         if (contentPartFee > 0) {
             beneficiary.transfer({ value: uint128(contentPartFee), bounce: false });
@@ -129,10 +129,10 @@ contract YlideMailerV5 is Owned {
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
 
-    function broadcastMailHeader(uint32 uniqueId, uint32 initTime) public {
+    function broadcastMailHeader(uint32 uniqueId, uint32 initTime) public pure {
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
 
-        emit MailBroadcast{dest: msg.sender}(msgId);
+        emit MailBroadcast{dest: address.makeAddrExtern(msg.sender.value, 256)}(msgId);
 
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }

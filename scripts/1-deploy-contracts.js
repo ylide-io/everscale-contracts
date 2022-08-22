@@ -18,6 +18,18 @@ async function main() {
         keyPair,
     });
 
+    const broadcaster = await locklift.giver.deployContract({
+        contract: Mailer,
+        constructorParams: {},
+        initParams: {
+            beneficiary:
+                "0:86c4c21b15f373d77e80d6449358cfe59fc9a03e756052ac52258d8dd0ceb977",
+            owner:
+                "0:86c4c21b15f373d77e80d6449358cfe59fc9a03e756052ac52258d8dd0ceb977",
+        },
+        keyPair,
+    });
+
     const registry = await locklift.giver.deployContract({
         contract: Registry,
         constructorParams: {},
@@ -26,6 +38,7 @@ async function main() {
     });
 
     console.log(`Mailer deployed at: ${mailer.address}`);
+    console.log(`Broadcaster deployed at: ${broadcaster.address}`);
     console.log(`Registry deployed at: ${registry.address}`);
 }
 
