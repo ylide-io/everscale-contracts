@@ -1,9 +1,10 @@
 pragma ever-solidity >= 0.61.2;
 
 contract Owned {
-    address public static owner;
+    address public owner;
 
     constructor() public {
+        owner = msg.sender;
     }
 
     modifier onlyOwner() {
@@ -20,6 +21,6 @@ contract Owned {
     }
 
     function terminate() public onlyOwner {
-        selfdestruct(owner);
+        selfdestruct(payable(owner));
     }
 }

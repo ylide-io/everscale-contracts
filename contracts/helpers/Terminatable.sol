@@ -1,0 +1,23 @@
+pragma ever-solidity >= 0.61.2;
+
+import './Owned.sol';
+
+contract Terminatable is Owned {
+    bool public terminated;
+
+    constructor() public {
+        terminated = false;
+    }
+
+    modifier notTerminated() {
+        if (terminated) {
+            revert();
+        }
+        _;
+    }
+
+    // intendedly left non-blocked to allow reassignment of termination block
+    function immediatelyTerminate() public onlyOwner {
+        terminated = true;
+    }
+}

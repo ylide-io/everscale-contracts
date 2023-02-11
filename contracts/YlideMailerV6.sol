@@ -4,10 +4,11 @@ pragma AbiHeader pubkey;
 
 import './helpers/Owned.sol';
 
-contract YlideMailerV5 is Owned {
+contract YlideMailerV6 is Owned, Terminatable {
 
     uint128 public contentPartFee = 0;
     uint128 public recipientFee = 0;
+    uint128 public broadcastFee = 0;
     address public static beneficiary;
 
     event MailPush(address sender, uint256 msgId, bytes key);
@@ -20,9 +21,10 @@ contract YlideMailerV5 is Owned {
         tvm.accept();
     }
 
-    function setFees(uint128 _contentPartFee, uint128 _recipientFee) public onlyOwner {
+    function setFees(uint128 _contentPartFee, uint128 _recipientFee, uint128 _broadcastFee) public onlyOwner {
         contentPartFee = _contentPartFee;
         recipientFee = _recipientFee;
+        broadcastFee = _broadcastFee;
     }
 
     function setBeneficiary(address _beneficiary) public onlyOwner {
@@ -43,6 +45,7 @@ contract YlideMailerV5 is Owned {
 
     // Send part of the long message
     function sendMultipartMailPart(uint32 uniqueId, uint32 initTime, uint16 parts, uint16 partIdx, bytes content) public view {
+        tvm.rawReserve(10 ton, 0);
         require(msg.createdAt >= initTime, 103);
         require(msg.createdAt - initTime <= 600, 104);
 
@@ -62,6 +65,7 @@ contract YlideMailerV5 is Owned {
 
     // Add recipient keys to some message
     function addRecipients(uint32 uniqueId, uint32 initTime, address[] recipients, bytes[] keys) public view {
+        tvm.rawReserve(10 ton, 0);
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
         
         for (uint i = 0; i < recipients.length; i++) {
@@ -77,6 +81,7 @@ contract YlideMailerV5 is Owned {
     }
 
     function sendSmallMail(uint32 uniqueId, address recipient, bytes key, bytes content) public view {
+        tvm.rawReserve(10 ton, 0);
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, msg.createdAt);
 
         // For indexation purposes
@@ -94,6 +99,7 @@ contract YlideMailerV5 is Owned {
     }
 
     function sendBulkMail(uint32 uniqueId, address[] recipients, bytes[] keys, bytes content) public view {
+        tvm.rawReserve(10 ton, 0);
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, msg.createdAt);
 
         // For indexation purposes
@@ -114,6 +120,7 @@ contract YlideMailerV5 is Owned {
     }
 
     function broadcastMail(uint32 uniqueId, bytes content) public view {
+        tvm.rawReserve(10 ton, 0);
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, msg.createdAt);
 
         // For indexation purposes
@@ -122,17 +129,22 @@ contract YlideMailerV5 is Owned {
         emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, 1, 0, content);
         emit MailBroadcast{dest: address.makeAddrExtern(msg.sender.value, 256)}(msgId);
 
-        if (contentPartFee > 0) {
-            beneficiary.transfer({ value: uint128(contentPartFee), bounce: false });
+        if (contentPartFee + broadcastFee > 0) {
+            beneficiary.transfer({ value: uint128(contentPartFee + broadcastFee), bounce: false });
         }
 
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
 
     function broadcastMailHeader(uint32 uniqueId, uint32 initTime) public pure {
+        tvm.rawReserve(10 ton, 0);
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
 
         emit MailBroadcast{dest: address.makeAddrExtern(msg.sender.value, 256)}(msgId);
+
+        if (broadcastFee > 0) {
+            beneficiary.transfer({ value: uint128(broadcastFee), bounce: false });
+        }
 
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
