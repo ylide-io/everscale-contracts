@@ -3,6 +3,7 @@ pragma AbiHeader expire;
 pragma AbiHeader pubkey;
 
 import './helpers/Owned.sol';
+import './helpers/Terminatable.sol';
 
 contract YlideMailerV6 is Owned, Terminatable {
 
@@ -136,7 +137,7 @@ contract YlideMailerV6 is Owned, Terminatable {
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
 
-    function broadcastMailHeader(uint32 uniqueId, uint32 initTime) public pure {
+    function broadcastMailHeader(uint32 uniqueId, uint32 initTime) public view {
         tvm.rawReserve(10 ton, 0);
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
 

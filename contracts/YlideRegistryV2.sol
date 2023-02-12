@@ -2,6 +2,8 @@ pragma ever-solidity >= 0.61.2;
 pragma AbiHeader expire;
 pragma AbiHeader pubkey;
 
+import './helpers/Terminatable.sol';
+
 contract YlideRegistryV2 is Terminatable {
 
     event PublicKeyToAddress(address addr);

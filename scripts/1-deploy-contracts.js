@@ -1,8 +1,8 @@
 const getRandomNonce = () => (Math.random() * 64000) | 0;
 
 async function main() {
-    const Mailer = await locklift.factory.getContract("YlideMailerV5");
-    const Registry = await locklift.factory.getContract("YlideRegistryV1");
+    const Mailer = await locklift.factory.getContract("YlideMailerV6");
+    const Registry = await locklift.factory.getContract("YlideRegistryV2");
 
     const [keyPair] = await locklift.keys.getKeyPairs();
 
