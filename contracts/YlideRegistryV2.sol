@@ -6,6 +6,8 @@ import './helpers/Terminatable.sol';
 
 contract YlideRegistryV2 is Terminatable {
 
+    uint256 public static nonce;
+
     event PublicKeyToAddress(address addr);
     event AddressToPublicKey(uint256 publicKey, uint32 keyVersion, uint32 registrar);
 

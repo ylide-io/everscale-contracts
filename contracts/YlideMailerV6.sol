@@ -7,6 +7,8 @@ import './helpers/Terminatable.sol';
 
 contract YlideMailerV6 is Owned, Terminatable {
 
+    uint256 public static nonce;
+
     uint128 public contentPartFee = 0;
     uint128 public recipientFee = 0;
     uint128 public broadcastFee = 0;
