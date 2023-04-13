@@ -1,22 +1,30 @@
 {
-    "name": "ylide-contract",
-    "version": "1.0.0",
-    "description": "",
-    "main": "locklift.config.js",
-    "directories": {
-        "test": "test"
-    },
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "build": "rm -rf ./build && locklift build --config locklift.config.js",
-        "deploy": "locklift run --config locklift.config.js --disable-build --network local --script scripts/1-deploy-contracts.js",
-        "deploy:account": "locklift run --config locklift.config.js --disable-build --network local --script scripts/2-deploy-account.js",
-        "deploy:mainnet": "everdev contract deploy ./build/YlideMailerV5.abi.json"
-    },
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "everdev": "^1.2.1",
-        "locklift": "^1.5.3"
-    }
+	"name": "ylide-contract",
+	"version": "1.0.0",
+	"description": "",
+	"main": "locklift.config.ts",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"build": "rm -rf ./build && locklift build",
+		"deploy": "locklift run --disable-build --network local --script scripts/1-deploy-contracts.ts",
+		"deploy:account": "locklift run --disable-build --network local --script scripts/2-deploy-account.ts",
+		"deploy:mainnet": "everdev contract deploy ./build/YlideMailerV5.abi.json"
+	},
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@types/chai": "4.3.4",
+		"@types/mocha": "10.0.1",
+		"@types/node": "18.15.11",
+		"chai": "4.3.7",
+		"dotenv": "^16.0.3",
+		"everscale-standalone-client": "2.1.18",
+		"locklift": "2.5.2",
+		"prettier": "2.8.7",
+		"ts-mocha": "10.0.0",
+		"typescript": "4.7.4"
+	}
 }
