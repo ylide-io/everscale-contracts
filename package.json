@@ -7,7 +7,7 @@
 		"test": "test"
 	},
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"test": "npx locklift test -n local",
 		"build": "rm -rf ./build && locklift build",
 		"deploy": "locklift run --disable-build --network local --script scripts/1-deploy-contracts.ts",
 		"deploy:account": "locklift run --disable-build --network local --script scripts/2-deploy-account.ts",
