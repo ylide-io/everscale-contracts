@@ -2,8 +2,8 @@ pragma ever-solidity >= 0.61.2;
 pragma AbiHeader expire;
 pragma AbiHeader pubkey;
 
-import './helpers/Owned.sol';
-import './helpers/Terminatable.sol';
+import './helpers/Owned.tsol';
+import './helpers/Terminatable.tsol';
 
 contract YlideMailerV6 is Owned, Terminatable {
 

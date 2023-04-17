@@ -1,6 +1,6 @@
 pragma ever-solidity >= 0.61.2;
 
-import './Owned.sol';
+import './Owned.tsol';
 
 contract Terminatable is Owned {
     bool public terminated;
