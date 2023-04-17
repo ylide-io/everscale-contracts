@@ -76,7 +76,7 @@ contract YlideMailerV7 is Owned, Terminatable {
             address recipientAddr = address.makeAddrExtern(recipients[i].value, 256);
             emit MailPush{dest: recipientAddr}(msg.sender, msgId, keys[i]);
         }
-        emit ContentRecipients{dest: address.makeAddrExtern(msgId, 256)}(msg.sender, msgId, recipients);
+        emit ContentRecipients{dest: address.makeAddrExtern(msgId + 1, 256)}(msg.sender, msgId, recipients);
 
         if (recipientFee * recipients.length > 0) {
             beneficiary.transfer({ value: uint128(recipientFee * recipients.length), bounce: false });
@@ -98,7 +98,7 @@ contract YlideMailerV7 is Owned, Terminatable {
 
         emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, 1, 0, content);
         emit MailPush{dest: recipientAddr}(msg.sender, msgId, key);
-        emit ContentRecipients{dest: fakeContentAddr}(msg.sender, msgId, recipients);
+        emit ContentRecipients{dest: address.makeAddrExtern(msgId + 1, 256)}(msg.sender, msgId, recipients);
 
         if (contentPartFee + recipientFee > 0) {
             beneficiary.transfer({ value: uint128(contentPartFee + recipientFee), bounce: false });
@@ -121,7 +121,7 @@ contract YlideMailerV7 is Owned, Terminatable {
             emit MailPush{dest: recipientAddr}(msg.sender, msgId, keys[i]);
         }
 
-        emit ContentRecipients{dest: fakeContentAddr}(msg.sender, msgId, recipients);
+        emit ContentRecipients{dest: address.makeAddrExtern(msgId + 1, 256)}(msg.sender, msgId, recipients);
 
         if (contentPartFee + recipientFee * recipients.length > 0) {
             beneficiary.transfer({ value: uint128(contentPartFee + recipientFee * recipients.length), bounce: false });
