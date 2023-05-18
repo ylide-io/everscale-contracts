@@ -5,7 +5,7 @@ pragma AbiHeader pubkey;
 contract YlideMailerV7 {
     address public owner;
     uint256[] public feedIds;
-    mapping (uint256 => bool) public feedIdExists;
+    mapping(uint256 => bool) feedIdExists;
 
     uint256 public static nonce;
 
@@ -43,6 +43,10 @@ contract YlideMailerV7 {
         if (newOwner != address(0)) {
             owner = newOwner;
         }
+    }
+
+    function doesFeedExist(uint256 feedId) public view returns (bool) {
+        return feedIdExists[feedId];
     }
 
     function terminate() public onlyOwner {

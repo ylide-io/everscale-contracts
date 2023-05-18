@@ -152,6 +152,8 @@ describe('Test YlideMailerV7 contract', async function () {
 
 			// user can send message to existing feed id
 			const { feedIds } = await mailer.methods.feedIds().call();
+			const feedExists = await mailer.methods.doesFeedExist({ feedId: feedIds[0] }).call();
+			expect(feedExists.value0).equal(true);
 			const { parentTransaction, childTransaction } = await mailer.methods
 				.broadcastMail({
 					feedId: feedIds[0],
