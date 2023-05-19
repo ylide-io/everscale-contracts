@@ -110,53 +110,10 @@ describe('Test YlideMailerV7 contract', async function () {
 			expect(childTransaction.outMessages.length).equal(3);
 		});
 
-		it('creates broadcast feed', async function () {
-			// not owner of contract cannot create broadcast feed
-			const { parentTransaction: pT, childTransaction: cT } = await mailer.methods
-				.createBroadcastFeed({
-					uniqueId,
-				})
-				.sendWithResult({
-					from: user1.address,
-					amount: locklift.utils.toNano(10),
-					bounce: false,
-				});
-			expect(pT.aborted).equal(false);
-			expect(cT.aborted).equal(true);
-
-			// owner creates broadcast feed
-			await mailer.methods
-				.createBroadcastFeed({
-					uniqueId,
-				})
-				.sendWithResult({
-					from: owner.address,
-					amount: locklift.utils.toNano(10),
-					bounce: false,
-				});
-
-			// user cannot send message to non existing feed id
-			const { parentTransaction: pT2, childTransaction: cT2 } = await mailer.methods
-				.broadcastMail({
-					feedId: 123,
-					uniqueId,
-					content,
-				})
-				.sendWithResult({
-					from: user1.address,
-					amount: locklift.utils.toNano(10),
-					bounce: false,
-				});
-			expect(pT2.aborted).equal(false);
-			expect(cT2.aborted).equal(true);
-
-			// user can send message to existing feed id
-			const { feedIds } = await mailer.methods.feedIds().call();
-			const feedExists = await mailer.methods.doesFeedExist({ feedId: feedIds[0] }).call();
-			expect(feedExists.value0).equal(true);
+		it('send broadcast mail', async function () {
 			const { parentTransaction, childTransaction } = await mailer.methods
 				.broadcastMail({
-					feedId: feedIds[0],
+					feedId: 12,
 					uniqueId,
 					content,
 				})
@@ -169,6 +126,24 @@ describe('Test YlideMailerV7 contract', async function () {
 			expect(childTransaction.aborted).equal(false);
 			expect(parentTransaction.outMessages.length).equal(1);
 			expect(childTransaction.outMessages.length).equal(3);
+		});
+
+		it('send broadcast mail header', async function () {
+			const { parentTransaction, childTransaction } = await mailer.methods
+				.broadcastMailHeader({
+					feedId: 12,
+					uniqueId,
+					initTime: 123,
+				})
+				.sendWithResult({
+					from: user1.address,
+					amount: locklift.utils.toNano(10),
+					bounce: false,
+				});
+			expect(parentTransaction.aborted).equal(false);
+			expect(childTransaction.aborted).equal(false);
+			expect(parentTransaction.outMessages.length).equal(1);
+			expect(childTransaction.outMessages.length).equal(2);
 		});
 	});
 });

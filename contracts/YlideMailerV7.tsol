@@ -4,8 +4,6 @@ pragma AbiHeader pubkey;
 
 contract YlideMailerV7 {
     address public owner;
-    uint256[] public feedIds;
-    mapping(uint256 => bool) feedIdExists;
 
     uint256 public static nonce;
 
@@ -32,21 +30,10 @@ contract YlideMailerV7 {
         _;
     }
 
-    modifier feedExists(uint256 feedId) {
-        if (!feedIdExists[feedId]) {
-            revert();
-        }
-        _;
-    }
-
     function transferOwnership(address newOwner) public onlyOwner {
         if (newOwner != address(0)) {
             owner = newOwner;
         }
-    }
-
-    function doesFeedExist(uint256 feedId) public view returns (bool) {
-        return feedIdExists[feedId];
     }
 
     function terminate() public onlyOwner {
@@ -68,6 +55,12 @@ contract YlideMailerV7 {
         data.append(bytes(bytes4(uniqueId)));
         data.append(bytes(bytes4(time)));
         _hash = sha256(data);
+    }
+
+    function composeFeedId(uint256 feedId, uint32 count) public pure returns (uint256 _feedId) {
+        bytes data = bytes(bytes32(feedId));
+        data.append(bytes(bytes4(count)));
+        _feedId = sha256(data);
     }
 
     // Virtual function for initializing bulk message sending
@@ -151,12 +144,12 @@ contract YlideMailerV7 {
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
 
-    function broadcastMail(uint256 feedId, uint32 uniqueId, bytes content) public view feedExists(feedId) {
+    function broadcastMail(uint256 feedId, uint32 uniqueId, bytes content) public view {
         tvm.rawReserve(10 ton, 0);
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, msg.createdAt);
-
+        uint256 composedFeedId = composeFeedId(feedId, 1);
         // For indexation purposes
-        address fakeContentAddr = address.makeAddrExtern(feedId, 256);
+        address fakeContentAddr = address.makeAddrExtern(composedFeedId, 256);
 
         emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, 1, 0, content);
         emit MailBroadcast{dest: fakeContentAddr}(msgId);
@@ -168,32 +161,17 @@ contract YlideMailerV7 {
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
 
-    function broadcastMailHeader(uint256 feedId, uint32 uniqueId, uint32 initTime) public view feedExists(feedId) {
+    function broadcastMailHeader(uint256 feedId, uint32 uniqueId, uint32 initTime) public view {
         tvm.rawReserve(10 ton, 0);
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
-
-        address fakeContentAddr = address.makeAddrExtern(feedId, 256);
+        uint256 composedFeedId = composeFeedId(feedId, 1);
+        address fakeContentAddr = address.makeAddrExtern(composedFeedId, 256);
 
         emit MailBroadcast{dest: fakeContentAddr}(msgId);
 
         if (broadcastFee > 0) {
             beneficiary.transfer({ value: uint128(broadcastFee), bounce: false });
         }
-
-        msg.sender.transfer({ value: 0, flag: 128, bounce: false });
-    }
-
-    function createBroadcastFeed(uint32 uniqueId) public onlyOwner {
-        tvm.rawReserve(10 ton, 0);
-
-        uint256 feedId = buildHash(msg.pubkey(), uniqueId, 0);
-
-        if (feedIdExists[feedId]) {
-            revert();
-        }
-
-        feedIds.push(feedId);
-        feedIdExists[feedId] = true;
 
         msg.sender.transfer({ value: 0, flag: 128, bounce: false });
     }
