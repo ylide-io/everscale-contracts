@@ -148,11 +148,9 @@ contract YlideMailerV7 {
         tvm.rawReserve(10 ton, 0);
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, msg.createdAt);
         uint256 composedFeedId = composeFeedId(feedId, 1);
-        // For indexation purposes
-        address fakeContentAddr = address.makeAddrExtern(composedFeedId, 256);
 
-        emit MailContent{dest: address.makeAddrExtern(msg.sender.value, 256)}(msg.sender, msgId, 1, 0, content);
-        emit MailBroadcast{dest: fakeContentAddr}(msgId);
+        emit MailContent{dest: address.makeAddrExtern(msgId, 256)}(msg.sender, msgId, 1, 0, content);
+        emit MailBroadcast{dest: address.makeAddrExtern(composedFeedId, 256)}(msgId);
 
         if (contentPartFee + broadcastFee > 0) {
             beneficiary.transfer({ value: uint128(contentPartFee + broadcastFee), bounce: false });
@@ -165,9 +163,8 @@ contract YlideMailerV7 {
         tvm.rawReserve(10 ton, 0);
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
         uint256 composedFeedId = composeFeedId(feedId, 1);
-        address fakeContentAddr = address.makeAddrExtern(composedFeedId, 256);
 
-        emit MailBroadcast{dest: fakeContentAddr}(msgId);
+        emit MailBroadcast{dest: address.makeAddrExtern(composedFeedId, 256)}(msgId);
 
         if (broadcastFee > 0) {
             beneficiary.transfer({ value: uint128(broadcastFee), bounce: false });
