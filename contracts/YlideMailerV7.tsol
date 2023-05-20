@@ -151,7 +151,7 @@ contract YlideMailerV7 {
         // For indexation purposes
         address fakeContentAddr = address.makeAddrExtern(composedFeedId, 256);
 
-        emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, 1, 0, content);
+        emit MailContent{dest: address.makeAddrExtern(msg.sender.value, 256)}(msg.sender, msgId, 1, 0, content);
         emit MailBroadcast{dest: fakeContentAddr}(msgId);
 
         if (contentPartFee + broadcastFee > 0) {
