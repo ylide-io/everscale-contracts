@@ -2,9 +2,9 @@ pragma ever-solidity >= 0.61.2;
 pragma AbiHeader expire;
 pragma AbiHeader pubkey;
 
-contract YlideMailerV7 {
-    address public owner;
+import './helpers/Owned2.tsol';
 
+contract YlideMailerV7 is Owned2 {
     uint256 public static nonce;
 
     uint128 public contentPartFee = 0;
@@ -16,28 +16,10 @@ contract YlideMailerV7 {
     event MailContent(address sender, uint256 msgId, uint16 parts, uint16 partIdx, bytes content);
     event MailBroadcast(uint256 msgId);
 
-    constructor(address _owner) public {
+    constructor(address _owner) Owned2(_owner)  public {
         require(tvm.pubkey() != 0, 101);
         require(msg.pubkey() == tvm.pubkey(), 102);
-        owner = _owner;
         tvm.accept();
-    }
-
-    modifier onlyOwner() {
-        if (msg.sender != owner) {
-            revert();
-        }
-        _;
-    }
-
-    function transferOwnership(address newOwner) public onlyOwner {
-        if (newOwner != address(0)) {
-            owner = newOwner;
-        }
-    }
-
-    function terminate() public onlyOwner {
-        selfdestruct(payable(owner));
     }
 
     function setFees(uint128 _contentPartFee, uint128 _recipientFee, uint128 _broadcastFee) public onlyOwner {
