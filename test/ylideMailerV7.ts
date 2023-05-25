@@ -44,6 +44,13 @@ describe('Test YlideMailerV7 contract', async function () {
 			});
 			mailer = contract;
 
+			expect(
+				await mailer.methods
+					.owner()
+					.call({})
+					.then(r => r.owner.equals(owner.address)),
+			).to.be.true;
+
 			expect(await locklift.provider.getBalance(mailer.address).then(balance => Number(balance))).to.be.above(0);
 		});
 
