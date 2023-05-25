@@ -14,7 +14,7 @@ contract YlideMailerV7 is Owned2 {
 
     event MailPush(address sender, uint256 msgId, bytes key);
     event MailContent(address sender, uint256 msgId, uint16 parts, uint16 partIdx, bytes content);
-    event MailBroadcast(uint256 msgId);
+    event MailBroadcast(address sender, uint256 msgId);
 
     constructor(address _owner) Owned2(_owner)  public {
         require(tvm.pubkey() != 0, 101);
@@ -132,7 +132,7 @@ contract YlideMailerV7 is Owned2 {
         uint256 composedFeedId = composeFeedId(feedId, 1);
 
         emit MailContent{dest: address.makeAddrExtern(msgId, 256)}(msg.sender, msgId, 1, 0, content);
-        emit MailBroadcast{dest: address.makeAddrExtern(composedFeedId, 256)}(msgId);
+        emit MailBroadcast{dest: address.makeAddrExtern(composedFeedId, 256)}(msg.sender, msgId);
 
         if (contentPartFee + broadcastFee > 0) {
             beneficiary.transfer({ value: uint128(contentPartFee + broadcastFee), bounce: false });
@@ -146,7 +146,7 @@ contract YlideMailerV7 is Owned2 {
         uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
         uint256 composedFeedId = composeFeedId(feedId, 1);
 
-        emit MailBroadcast{dest: address.makeAddrExtern(composedFeedId, 256)}(msgId);
+        emit MailBroadcast{dest: address.makeAddrExtern(composedFeedId, 256)}(msg.sender, msgId);
 
         if (broadcastFee > 0) {
             beneficiary.transfer({ value: uint128(broadcastFee), bounce: false });
