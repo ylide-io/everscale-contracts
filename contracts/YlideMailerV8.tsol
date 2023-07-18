@@ -1,0 +1,168 @@
+pragma ever-solidity >= 0.61.2;
+pragma AbiHeader expire;
+pragma AbiHeader pubkey;
+
+import './helpers/Owned2.tsol';
+
+contract YlideMailerV8 is Owned2 {
+    uint256 public static nonce;
+
+    uint128 public contentPartFee = 0;
+    uint128 public recipientFee = 0;
+    uint128 public broadcastFee = 0;
+    address public static beneficiary;
+    address public static extraTreasury;
+
+    event MailPush(address sender, uint256 msgId, bytes key);
+    event MailContent(address sender, uint256 msgId, uint16 parts, uint16 partIdx, bytes content);
+    event MailBroadcast(address sender, uint256 msgId, uint128 extraPayment);
+
+    constructor(address _owner) Owned2(_owner)  public {
+        require(tvm.pubkey() != 0, 101);
+        require(msg.pubkey() == tvm.pubkey(), 102);
+        tvm.accept();
+    }
+
+    function setFees(uint128 _contentPartFee, uint128 _recipientFee, uint128 _broadcastFee) public onlyOwner {
+        contentPartFee = _contentPartFee;
+        recipientFee = _recipientFee;
+        broadcastFee = _broadcastFee;
+    }
+
+    function setBeneficiary(address _beneficiary) public onlyOwner {
+        beneficiary = _beneficiary;
+    }
+
+    function setExtraTreasury(address _extraTreasury) public onlyOwner {
+        extraTreasury = _extraTreasury;
+    }
+
+    function buildHash(uint256 pubkey, uint32 uniqueId, uint32 time) public pure returns (uint256 _hash) {
+        bytes data = bytes(bytes32(pubkey));
+        data.append(bytes(bytes4(uniqueId)));
+        data.append(bytes(bytes4(time)));
+        _hash = sha256(data);
+    }
+
+    function composeFeedId(uint256 feedId, uint32 count) public pure returns (uint256 _feedId) {
+        bytes data = bytes(bytes32(feedId));
+        data.append(bytes(bytes4(count)));
+        _feedId = sha256(data);
+    }
+
+    // Virtual function for initializing bulk message sending
+    function getMsgId(uint256 publicKey, uint32 uniqueId, uint32 initTime) public pure returns (uint256 msgId) {
+        msgId = buildHash(publicKey, uniqueId, initTime);
+    }
+
+    // Send part of the long message
+    function sendMultipartMailPart(uint32 uniqueId, uint32 initTime, uint16 parts, uint16 partIdx, bytes content) public view {
+        tvm.rawReserve(10 ton, 0);
+        require(msg.createdAt >= initTime, 103);
+        require(msg.createdAt - initTime <= 600, 104);
+
+        uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
+
+        // For indexation purposes
+        address fakeContentAddr = address.makeAddrExtern(msgId, 256);
+
+        emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, parts, partIdx, content);
+
+        if (contentPartFee > 0) {
+            beneficiary.transfer({ value: contentPartFee, bounce: false });
+        }
+
+        msg.sender.transfer({ value: 0, flag: 128, bounce: false });
+    }
+
+    // Add recipient keys to some message
+    function addRecipients(uint32 uniqueId, uint32 initTime, address[] recipients, bytes[] keys) public view {
+        tvm.rawReserve(10 ton, 0);
+        uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
+        
+        for (uint i = 0; i < recipients.length; i++) {
+            address recipientAddr = address.makeAddrExtern(recipients[i].value, 256);
+            emit MailPush{dest: recipientAddr}(msg.sender, msgId, keys[i]);
+        }
+
+        if (recipientFee * recipients.length > 0) {
+            beneficiary.transfer({ value: uint128(recipientFee * recipients.length), bounce: false });
+        }
+
+        msg.sender.transfer({ value: 0, flag: 128, bounce: false });
+    }
+
+    function sendSmallMail(uint32 uniqueId, address recipient, bytes key, bytes content) public view {
+        tvm.rawReserve(10 ton, 0);
+        uint256 msgId = buildHash(msg.pubkey(), uniqueId, msg.createdAt);
+
+        // For indexation purposes
+        address fakeContentAddr = address.makeAddrExtern(msgId, 256);
+        address recipientAddr = address.makeAddrExtern(recipient.value, 256);
+
+        emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, 1, 0, content);
+        emit MailPush{dest: recipientAddr}(msg.sender, msgId, key);
+
+        if (contentPartFee + recipientFee > 0) {
+            beneficiary.transfer({ value: uint128(contentPartFee + recipientFee), bounce: false });
+        }
+
+        msg.sender.transfer({ value: 0, flag: 128, bounce: false });
+    }
+
+    function sendBulkMail(uint32 uniqueId, address[] recipients, bytes[] keys, bytes content) public view {
+        tvm.rawReserve(10 ton, 0);
+        uint256 msgId = buildHash(msg.pubkey(), uniqueId, msg.createdAt);
+
+        // For indexation purposes
+        address fakeContentAddr = address.makeAddrExtern(msgId, 256);
+
+        emit MailContent{dest: fakeContentAddr}(msg.sender, msgId, 1, 0, content);
+
+        for (uint i = 0; i < recipients.length; i++) {
+            address recipientAddr = address.makeAddrExtern(recipients[i].value, 256);
+            emit MailPush{dest: recipientAddr}(msg.sender, msgId, keys[i]);
+        }
+
+        if (contentPartFee + recipientFee * recipients.length > 0) {
+            beneficiary.transfer({ value: uint128(contentPartFee + recipientFee * recipients.length), bounce: false });
+        }
+
+        msg.sender.transfer({ value: 0, flag: 128, bounce: false });
+    }
+
+    function broadcastMail(uint256 feedId, uint32 uniqueId, bytes content, uint128 extraPayment) public view {
+        tvm.rawReserve(10 ton, 0);
+        uint256 msgId = buildHash(msg.pubkey(), uniqueId, msg.createdAt);
+        uint256 composedFeedId = composeFeedId(feedId, 1);
+
+        emit MailContent{dest: address.makeAddrExtern(msgId, 256)}(msg.sender, msgId, 1, 0, content);
+        emit MailBroadcast{dest: address.makeAddrExtern(composedFeedId, 256)}(msg.sender, msgId, extraPayment);
+
+        if (contentPartFee + broadcastFee > 0) {
+            beneficiary.transfer({ value: uint128(contentPartFee + broadcastFee), bounce: false });
+        }
+        if (extraPayment > 0) {
+            extraTreasury.transfer({ value: extraPayment, bounce: false });
+        }
+
+        msg.sender.transfer({ value: 0, flag: 128, bounce: false });
+    }
+
+    function broadcastMailHeader(uint256 feedId, uint32 uniqueId, uint32 initTime, uint128 extraPayment) public view {
+        tvm.rawReserve(10 ton, 0);
+        uint256 msgId = buildHash(msg.pubkey(), uniqueId, initTime);
+        uint256 composedFeedId = composeFeedId(feedId, 1);
+
+        emit MailBroadcast{dest: address.makeAddrExtern(composedFeedId, 256)}(msg.sender, msgId, extraPayment);
+
+        if (broadcastFee > 0) {
+            beneficiary.transfer({ value: uint128(broadcastFee), bounce: false });
+        }
+        if (extraPayment > 0) {
+            extraTreasury.transfer({ value: extraPayment, bounce: false });
+        }
+
+        msg.sender.transfer({ value: 0, flag: 128, bounce: false });
+    }
+}
